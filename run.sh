@@ -4,11 +4,11 @@
 #cp ../data/kftt/kftt_devtest.txt ../data/kftt/dev.txt
 #cp ../data/kftt/kftt_devtest.txt ../data/kftt/test.txt
 #
-#python wa2span_squad.py --do_lower --whole --wa_file ../data/kftt/train.txt --out ../data/kftt/train.json
-#python wa2span_squad.py --do_lower --whole --wa_file ../data/kftt/dev.txt --out ../data/kftt/dev.json
-#python wa2span_squad.py --do_lower --whole --wa_file ../data/kftt/test.txt --out ../data/kftt/test.json
+python wa2span_squad.py --do_lower --whole --wa_file ../data/kftt/train.txt --out ../data/kftt/train.json
+python wa2span_squad.py --do_lower --whole --wa_file ../data/kftt/dev.txt --out ../data/kftt/dev.json
+python wa2span_squad.py --do_lower --whole --wa_file ../data/kftt/test.txt --out ../data/kftt/test.json
 
-# rm -r ~/.cache/huggingface/datasets/*
+rm -r ~/.cache/huggingface/datasets/*
 MODEL=bert-base-multilingual-cased
 DATADIR='../data/'
 SEED=42

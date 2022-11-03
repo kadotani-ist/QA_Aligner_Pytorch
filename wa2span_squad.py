@@ -231,7 +231,7 @@ def main(args):
         # end
     # end
     with open(args.out, 'w') as fw:
-        json.dump(w2s, fw, indent=2)
+        json.dump(w2s, fw, ensure_ascii=False, indent=2)
     # print(json.dumps(w2s, ensure_ascii=False, indent=2)) # 標準出力へ
 
 

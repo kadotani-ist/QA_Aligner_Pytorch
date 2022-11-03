@@ -118,7 +118,7 @@ def main(args):
     # print(json.dumps(nbest_predictions_json,
     #                  ensure_ascii=False, indent=2)) # 標準出力へ
     with open(args.out, 'w') as fw:
-        json.dump(nbest_predictions_json, fw, indent=2)
+        json.dump(nbest_predictions_json, fw, ensure_ascii=False, indent=2)
 
 
 if __name__ == '__main__':
