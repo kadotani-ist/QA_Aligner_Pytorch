@@ -280,6 +280,9 @@ def parse_args():
         help="If the training should continue from a checkpoint folder.",
     )
     parser.add_argument(
+        "--save_model", action="store_true", help="Save the pretrained model"
+    )
+    parser.add_argument(
         "--with_tracking",
         action="store_true",
         help="Whether to enable experiment trackers for logging.",
@@ -742,9 +745,14 @@ def main():
     )
 
     # Prepare everything with our `accelerator`.
-    model, optimizer, train_dataloader, eval_dataloader, lr_scheduler = accelerator.prepare(
-        model, optimizer, train_dataloader, eval_dataloader, lr_scheduler
-    )
+    if args.do_predict:
+        model, optimizer, train_dataloader, eval_dataloader, predict_dataloader, lr_scheduler = accelerator.prepare(
+            model, optimizer, train_dataloader, eval_dataloader, predict_dataloader, lr_scheduler
+        )
+    else:
+        model, optimizer, train_dataloader, eval_dataloader, lr_scheduler = accelerator.prepare(
+            model, optimizer, train_dataloader, eval_dataloader, lr_scheduler
+        )
 
     # We need to recalculate our total training steps as the size of the training dataloader may have changed.
     num_update_steps_per_epoch = math.ceil(len(train_dataloader) / args.gradient_accumulation_steps)
@@ -894,7 +902,7 @@ def main():
     del all_end_logits
 
     outputs_numpy = (start_logits_concat, end_logits_concat)
-    prediction = post_processing_function(eval_examples, eval_dataset, outputs_numpy)
+    prediction = post_processing_function(eval_examples, eval_dataset, outputs_numpy, stage='dev')
     eval_metric = metric.compute(predictions=prediction.predictions, references=prediction.label_ids)
     logger.info(f"Evaluation metrics: {eval_metric}")
 
@@ -932,7 +940,7 @@ def main():
         del all_end_logits
 
         outputs_numpy = (start_logits_concat, end_logits_concat)
-        prediction = post_processing_function(predict_examples, predict_dataset, outputs_numpy)
+        prediction = post_processing_function(predict_examples, predict_dataset, outputs_numpy, stage='test')
         predict_metric = metric.compute(predictions=prediction.predictions, references=prediction.label_ids)
         logger.info(f"Predict metrics: {predict_metric}")
 
@@ -943,12 +951,11 @@ def main():
             "epoch": epoch,
             "step": completed_steps,
         }
-    if args.do_predict:
-        log["squad_v2_predict" if args.version_2_with_negative else "squad_predict"] = predict_metric
+    # if args.do_predict:
+    #     log["squad_v2_predict" if args.version_2_with_negative else "squad_predict"] = predict_metric
+    #     accelerator.log(log, step=completed_steps)
 
-        accelerator.log(log, step=completed_steps)
-
-    if args.output_dir is not None:
+    if args.save_model:
         accelerator.wait_for_everyone()
         unwrapped_model = accelerator.unwrap_model(model)
         unwrapped_model.save_pretrained(
@@ -961,7 +968,11 @@ def main():
 
             logger.info(json.dumps(eval_metric, indent=4))
             save_prefixed_metrics(eval_metric, args.output_dir)
-
+    else:
+        accelerator.wait_for_everyone()
+        if accelerator.is_main_process:
+            logger.info(json.dumps(eval_metric, indent=4))
+            save_prefixed_metrics(eval_metric, args.output_dir)
 
 if __name__ == "__main__":
     main()

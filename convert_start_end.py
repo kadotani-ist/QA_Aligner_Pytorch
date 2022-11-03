@@ -85,10 +85,6 @@ def main(args):
             end = prediction['end']
             context_tokens = id2context_tokens[id]
             question_tokens = id2question_tokens[id]
-            # if len(question_tokens) > args.max_query_length: # queryの最大長
-            #     offset = args.max_query_length + 2
-            # else:
-            #     offset = len(question_tokens) + 2
             offset = len(question_tokens) + 2
             q_tok_text = ' '.join(question_tokens)
             c_tok_text = ' '.join(context_tokens)
@@ -119,24 +115,26 @@ def main(args):
                     print(a_text, ',', a_tok_text)
                     print(c_tok_text, a_start_char_index, a_end_char_index)
     
-    print(json.dumps(nbest_predictions_json,
-                     ensure_ascii=False, indent=2)) # 標準出力へ
+    # print(json.dumps(nbest_predictions_json,
+    #                  ensure_ascii=False, indent=2)) # 標準出力へ
+    with open(args.out, 'w') as fw:
+        json.dump(nbest_predictions_json, fw, indent=2)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--nbest_predictions', '-n',
-                        help='nbest predictions json file')
+                        help='nbest predictions json file', required=True)
     parser.add_argument('--questions', '-q',
                         metavar='questions',
-                        help='context, question and answer json file')
-    parser.add_argument('--max_query_length', '-m',
-                        type=int, default=64)
+                        help='context, question and answer json file', required=True)
     parser.add_argument(
         "--model_name_or_path",
         type=str,
         help="Path to pretrained model or model identifier from huggingface.co/models.",
-        required=False,
+        required=True,
     )
+    parser.add_argument("--out", type=str, default=None, help="Path to the output file", required=True)
     parser.add_argument('--verbose', '-v', action='store_true')
     args = parser.parse_args()
 
